@@ -698,20 +698,8 @@ KIMI_MODELS: List[ModelInfo] = [
 ]
 
 DEEPSEEK_MODELS: List[ModelInfo] = [
-    ModelInfo(
-        id="deepseek-chat",
-        name="DeepSeek Chat",
-        supports_image=False,
-        supports_video=False,
-        probe_source="documentation",
-    ),
-    ModelInfo(
-        id="deepseek-reasoner",
-        name="DeepSeek Reasoner",
-        supports_image=False,
-        supports_video=False,
-        probe_source="documentation",
-    ),
+    # deepseek-chat / deepseek-reasoner (V3.x) retired by vendor — no longer
+    # served by api.deepseek.com (verified via live GET /models).
     ModelInfo(
         id="deepseek-v4-flash",
         name="DeepSeek V4 Flash",
@@ -723,6 +711,13 @@ DEEPSEEK_MODELS: List[ModelInfo] = [
         id="deepseek-v4-pro",
         name="DeepSeek V4 Pro",
         supports_image=False,
+        supports_video=False,
+        probe_source="documentation",
+    ),
+    ModelInfo(
+        id="deepseek-v4-flash-vision-exp",
+        name="DeepSeek V4 Flash Vision Exp",
+        supports_image=True,
         supports_video=False,
         probe_source="documentation",
     ),
@@ -1421,8 +1416,6 @@ class ProviderManager:  # pylint: disable=too-many-public-methods
         self._add_builtin(PROVIDER_ALIYUN_CODINGPLAN_INTL)
         self._add_builtin(PROVIDER_ALIYUN_TOKENPLAN)
         self._add_builtin(PROVIDER_ALIYUN_TOKENPLAN_INTL)
-        self._add_builtin(PROVIDER_OPENCODE)
-        self._add_builtin(PROVIDER_KILO)
         self._add_builtin(PROVIDER_OPENAI)
         self._add_builtin(PROVIDER_OPENAI_RESPONSE)
         self._add_builtin(PROVIDER_AZURE_OPENAI)
