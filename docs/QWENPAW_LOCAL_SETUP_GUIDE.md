@@ -488,3 +488,76 @@ Applied in this setup: **OpenCode + Kilo Code** providers removed; **deepseek-ch
 deepseek-reasoner** removed (retired upstream, verified); **deepseek-v4-flash-vision-exp**
 added to the catalog (1M ctx, image input, live-tested). User API keys survive all of
 this (stored encrypted, re-merged into the new catalog on load).
+
+---
+
+## 13. Fork & contribution workflow
+
+This checkout is the active fork **valeriiD/QwenPaw** of
+**agentscope-ai/QwenPaw**, organized for contributing upstream.
+
+### Remotes
+
+| Remote | URL | Role |
+|---|---|---|
+| `origin` | `https://github.com/valeriiD/QwenPaw` | your fork — push here, PR from here |
+| `upstream` | `https://github.com/agentscope-ai/QwenPaw` | official repo — fetch only |
+
+### Branch map
+
+| Branch | Tracks | Purpose |
+|---|---|---|
+| `main` | `upstream/main` | read-only mirror of upstream; **contribution base — never commit here** |
+| `release/v2.1.0` | `upstream/release/v2.1.0` | upstream release branch (historical) |
+| `local/custom` | `origin/local/custom` | **daily driver** — release/v2.1.0 + personal catalog/docs changes; the editable install runs from this checkout |
+| `feat/deepseek-catalog-update` | `upstream/main` | **PR-ready** — DeepSeek catalog refresh for upstream |
+
+> ⚠️ `upstream/main` has diverged heavily from the release branch: model catalogs
+> moved from `provider_manager.py` into `src/qwenpaw/providers/data/model_catalog.json`
+> (schema_version 1, catalog_version stamped). Release-branch edits **cannot be
+> cherry-picked** to main — re-apply them in the JSON catalog instead.
+
+### Daily loop
+
+```bash
+# 1) sync upstream into your fork's main (never commit to main yourself)
+git switch main && git pull --ff-only upstream main && git push origin main
+
+# 2) start a contribution
+git switch -c feat/<topic> upstream/main
+# ... edit, then commit with Conventional Commits (see CONTRIBUTING.md)
+git commit -m "fix(providers): <what and why>"
+
+# 3) quality gate (required before PR; first run downloads hook envs)
+/home/<user>/.venvs/qwenpaw/bin/pre-commit run --all-files
+pytest   # via make test / scripts/run_tests.py
+
+# 4) push & open PR (needs your GitHub credentials once)
+git push -u origin feat/<topic>
+# then: https://github.com/agentscope-ai/QwenPaw/compare/main...valeriiD:QwenPaw:feat/<topic>
+
+# 5) runtime continuity — switch back to the daily-driver branch
+git switch local/custom
+```
+
+### Ready-to-push first contribution
+
+`feat/deepseek-catalog-update` (based on `upstream/main`, commit
+`fix(providers): refresh DeepSeek catalog per vendor retirement and docs`) updates
+`data/model_catalog.json`: removes vendor-retired `deepseek-chat`/`deepseek-reasoner`
+(verified via live `GET api.deepseek.com/models`), corrects v4 context windows to
+1M (official pricing table), adds `deepseek-v4-flash-vision-exp`, bumps
+`catalog_version` to `2026.08.23`. Push it and open the PR with the command above.
+
+Follow-up PR candidates identified during the catalog audit:
+- MiniMax-M2.5 context 131072 → **196608** (HF `config.json` ground truth; M2.7 is already 204800)
+- add `kimi-k3` to KIMI_MODELS (1M ctx, image input — platform.kimi.ai docs)
+
+### Notes
+
+- Commits made during setup used `--no-verify`; run
+  `pre-commit run --all-files` before pushing/PR (hooks now installed:
+  `pre-commit 4.6.2` registered at `.git/hooks/pre-commit`).
+- Git identity configured repo-locally: `ValeriiD <valerii.f.danilov@gmail.com>`.
+- Push from this machine requires auth (no gh CLI / stored credentials):
+  `git config credential.helper store` + one interactive push, or install gh CLI.
